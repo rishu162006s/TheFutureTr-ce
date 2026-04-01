@@ -24,7 +24,12 @@ app.include_router(auth_router)
 # Fix #9/#11: Permissive CORS so Next.js dev (port 3000) can reach FastAPI (port 8010)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.68.95:3000"],
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000", 
+        "http://192.168.68.95:3000",
+        "https://the-future-tr-ce.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

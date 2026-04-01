@@ -4,10 +4,9 @@
  * In production (both served from port 8010 via static export), API_BASE is empty → relative calls.
  */
 
-// frontend/src/lib/api.ts
-
-// Always use port 8010 — the FastAPI backend runs here
-const API_BASE = 'http://localhost:8010';
+// Priority 1: Environment Variable (for Vercel/Production)
+// Priority 2: Localhost (for Local Dev)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   // Clean up endpoint to ensure no double slashes
