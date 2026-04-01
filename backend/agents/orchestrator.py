@@ -13,7 +13,7 @@ from intelligence.reasoning_engine import ReasoningEngine
 from agents.startup_agents import StartupAgents
 from core.models import (
     DashboardState, RadarItem, DomainSummary, AlertItem, TrendForecast, TrendDataPoint,
-    ScoredSignal, TechnologyProfile, SignalClassification, MaturityStage,
+    ScoredSignal, SignalScore, TechnologyProfile, SignalClassification, MaturityStage,
     RawSignal, MissionResponse, UserFeedback
 )
 from core.subscription_models import UserStatus, SubscriptionRequest

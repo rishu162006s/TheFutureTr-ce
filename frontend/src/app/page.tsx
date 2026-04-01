@@ -147,7 +147,8 @@ function LandingAuthView({onAuthSuccess}:{onAuthSuccess:()=>void}) {
   const handleForgotRequest=async(e:React.FormEvent)=>{
     e.preventDefault(); setError(""); setSuccess(""); setLoading(true);
     try{
-      const res=await fetch("http://localhost:8010/api/auth/forgot-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+      const res=await fetch(`${API_BASE}/api/auth/forgot-password`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
       const d=await res.json();
       if(!res.ok) throw new Error(d.detail||"Failed to send reset code");
       setSuccess("Reset code sent! Check your terminal logs.");
@@ -162,7 +163,8 @@ function LandingAuthView({onAuthSuccess}:{onAuthSuccess:()=>void}) {
     if(newPwd.length<6){ setError("Password must be at least 6 characters."); return; }
     setLoading(true);
     try{
-      const res=await fetch("http://localhost:8010/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,code:resetCode,new_password:newPwd})});
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+      const res=await fetch(`${API_BASE}/api/auth/reset-password`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,code:resetCode,new_password:newPwd})});
       const d=await res.json();
       if(!res.ok) throw new Error(d.detail||"Reset failed");
       localStorage.setItem("ft-auth-token",d.access_token);
@@ -175,7 +177,8 @@ function LandingAuthView({onAuthSuccess}:{onAuthSuccess:()=>void}) {
   const handleSignIn=async(e:React.FormEvent)=>{
     e.preventDefault(); setError(""); setLoading(true);
     try{
-      const res=await fetch("http://localhost:8010/api/auth/signin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+      const res=await fetch(`${API_BASE}/api/auth/signin`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});
       const d=await res.json();
       if(!res.ok) throw new Error(d.detail||"Authentication failed");
       localStorage.setItem("ft-auth-token",d.access_token);
@@ -191,7 +194,8 @@ function LandingAuthView({onAuthSuccess}:{onAuthSuccess:()=>void}) {
     if(password.length<6){ setError("Password must be at least 6 characters."); return; }
     setLoading(true);
     try{
-      const res=await fetch("http://localhost:8010/api/auth/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,name:email.split("@")[0]})});
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+      const res=await fetch(`${API_BASE}/api/auth/signup`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,name:email.split("@")[0]})});
       const d=await res.json();
       if(!res.ok) throw new Error(d.detail||"Sign up failed");
       localStorage.setItem("ft-auth-token",d.access_token);
@@ -215,14 +219,11 @@ function LandingAuthView({onAuthSuccess}:{onAuthSuccess:()=>void}) {
       <div className="ft-scanlines"/>
 
       <div className="ft-content">
-        <div className={`ft-logo-badge ${titleVisible?"ft-fade-in":""}`}>
-          <span className="ft-logo-dot"/><span className="ft-logo-text">FUTURETRACE INTELLIGENCE PLATFORM</span><span className="ft-logo-dot"/>
-        </div>
-        <div className={`ft-hero-title ${titleVisible?"ft-slide-up":""}`}>
-          <span className="ft-title-glow">Future</span><span className="ft-title-accent">Tr@ce</span>
+        <div className={`ft-landing-logo ${titleVisible?"ft-fade-in":""}`}>
+          <img src="/logo.png" alt="FutureTr@cker" className="ft-landing-logo-img" />
         </div>
         <div className={`ft-hero-sub ${titleVisible?"ft-fade-in":""}`} style={{animationDelay:"0.3s"}}>
-          Next-Generation A.I. Domain Intelligence Platform
+          Navigate Tomorrow — A.I. Intelligence Platform
         </div>
         <div className={`ft-pills ${titleVisible?"ft-fade-in":""}`} style={{animationDelay:"0.55s"}}>
           {["🧬 Signal Detection","📡 Live Trends","🤖 Agentic AI","🔭 Tech Radar","⚡ Live Intel"].map((t,i)=>(
@@ -439,10 +440,10 @@ export default function Page(){
       {/* ── TOP NAV ── */}
       <nav className="top-nav">
         <div className="nav-brand">
-          <div className="nav-brand-icon">F</div>
+          <img src="/logo.png" alt="FutureTr@cker" className="nav-brand-logo" />
           <div>
-            <div className="nav-brand-name">FutureTr@ce</div>
-            <div className="nav-brand-tag">Intelligence Platform</div>
+            <div className="nav-brand-name">FutureTr@cker</div>
+            <div className="nav-brand-tag">Navigate Tomorrow</div>
           </div>
         </div>
         <div className="nav-divider"/>
@@ -495,7 +496,7 @@ export default function Page(){
                     setShowDrop(false);
                     if(confirm("Sign out of FutureTr@ce? Your local data will be kept.")){
                       localStorage.removeItem("ft-auth-token");
-                      window.location.reload();
+                      window.location.href = "/";
                     }
                   }}>
                     <span className="udrop-icon">🚪</span> Sign Out
@@ -572,10 +573,8 @@ export default function Page(){
           settings={settings} onSave={saveSettings}
           onClose={()=>setShowSettings(false)}
           onSignOut={()=>{
-            if(confirm("Sign out of FutureTr@ce? Your local data will be kept.")){
-              localStorage.removeItem("ft-auth-token");
-              window.location.reload();
-            }
+            localStorage.removeItem("ft-auth-token");
+            window.location.href = "/";
           }}
         />
       )}

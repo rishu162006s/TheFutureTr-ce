@@ -123,6 +123,13 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; color: var(--text-headin
   flex-shrink: 0;
 }
 
+.nav-brand-logo {
+  width: 38px; height: 38px; border-radius: 9px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(99,102,241,0.35));
+}
+
 .nav-brand-name {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 17px; font-weight: 700;
@@ -1075,17 +1082,19 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; color: var(--text-headin
   width: 100%; max-width: 480px;
   padding: 0 24px;
 }
-.ft-logo-badge {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(99,102,241,0.12);
-  border: 1px solid rgba(99,102,241,0.3);
-  border-radius: 100px;
-  padding: 6px 16px; margin-bottom: 28px; opacity: 0;
+.ft-landing-logo {
+  margin-bottom: 24px;
+  display: flex; justify-content: center;
+  opacity: 0;
 }
-.ft-logo-icon { font-size: 14px; color: #818cf8; }
-.ft-logo-text {
-  font-size: 10px; font-weight: 700; letter-spacing: 3px;
-  color: #818cf8; text-transform: uppercase;
+.ft-landing-logo-img {
+  width: 140px; height: 140px; object-fit: contain;
+  filter: drop-shadow(0 4px 24px rgba(99,102,241,0.4));
+  animation: ftLogoPulse 4s infinite alternate;
+}
+@keyframes ftLogoPulse {
+  0%   { filter: drop-shadow(0 4px 20px rgba(99,102,241,0.3)); transform: scale(1); }
+  100% { filter: drop-shadow(0 8px 36px rgba(139,92,246,0.5)); transform: scale(1.03); }
 }
 .ft-hero-title {
   font-family: 'Space Grotesk', sans-serif;
