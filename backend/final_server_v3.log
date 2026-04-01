@@ -1,0 +1,14 @@
+2026-03-31 19:02:54 [info     ] Knowledge Graph initialized    edges=16 nodes=21
+INFO:     127.0.0.1:49675 - "OPTIONS /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49675 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62677 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58610 - "OPTIONS /api/rabbit-hole/mission HTTP/1.1" 200 OK
+2026-03-31 19:03:47 [info     ] Executing reasoning mission    constraints={'depth': 3, 'risk': 'low', 'domain': None} goal='opportunities in healthcare'
+INFO:     127.0.0.1:58610 - "POST /api/rabbit-hole/mission HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63090 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53569 - "OPTIONS /api/startup-ideas HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53569 - "GET /api/startup-ideas HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62765 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60470 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57492 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59948 - "GET /api/dashboard HTTP/1.1" 200 OK
