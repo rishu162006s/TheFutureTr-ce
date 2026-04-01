@@ -495,9 +495,6 @@ export default function Page(){
                     setShowDrop(false);
                     if(confirm("Sign out of FutureTr@ce? Your local data will be kept.")){
                       localStorage.removeItem("ft-auth-token");
-                      localStorage.removeItem("ft-profile");
-                      localStorage.removeItem("ft-settings");
-                      localStorage.removeItem("ft-theme");
                       window.location.reload();
                     }
                   }}>
@@ -576,9 +573,7 @@ export default function Page(){
           onClose={()=>setShowSettings(false)}
           onSignOut={()=>{
             if(confirm("Sign out of FutureTr@ce? Your local data will be kept.")){
-              localStorage.removeItem("ft-profile");
-              localStorage.removeItem("ft-settings");
-              localStorage.removeItem("ft-theme");
+              localStorage.removeItem("ft-auth-token");
               window.location.reload();
             }
           }}

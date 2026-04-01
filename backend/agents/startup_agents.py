@@ -39,14 +39,14 @@ class StartupAgents:
         
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(url, timeout=6) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=6)) as resp:
                     data = await resp.json()
                     hits = data.get("hits", [])
                     
                     # If limited results for 'Show HN', broaden search
                     if len(hits) < 3:
                         url2 = f"https://hn.algolia.com/api/v1/search?query={query} startup&tags=story&hitsPerPage=5"
-                        async with session.get(url2, timeout=4) as resp2:
+                        async with session.get(url2, timeout=aiohttp.ClientTimeout(total=4)) as resp2:
                             data2 = await resp2.json()
                             hits.extend(data2.get("hits", []))
                             
@@ -230,7 +230,7 @@ class StartupAgents:
         try:
             url = f"http://export.arxiv.org/api/query?search_query=all:{idea_norm.replace(' ', '+')}&start=0&max_results=2"
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=5) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
                     xml_data = await resp.text()
                     # Parse xml manually
                     titles = re.findall(r'<title>(.*?)</title>', xml_data, re.DOTALL)

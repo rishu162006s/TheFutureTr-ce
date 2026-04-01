@@ -58,8 +58,10 @@ async def get_dashboard():
 # ── Pipeline ──────────────────────────────────────────────────
 @app.post("/api/pipeline/run")
 async def run_pipeline():
-    await orchestrator.run_pipeline()
-    return {"status": "complete", "timestamp": datetime.utcnow()}
+    """Kick off a fresh pipeline sweep in background and return immediately."""
+    if not orchestrator._running:
+        asyncio.create_task(orchestrator.run_pipeline())
+    return {"status": "started", "timestamp": datetime.utcnow()}
 
 @app.get("/api/pipeline/status")
 async def get_pipeline_status():
@@ -73,7 +75,8 @@ async def get_signals():
 
 @app.get("/api/signals/{tech}")
 async def get_signal_detail(tech: str):
-    for s in orchestrator.get_signals():
+    signals = await orchestrator.get_signals()
+    for s in signals:
         if s.technology.lower() == tech.lower():
             return s
     raise HTTPException(status_code=404, detail="Signal not found")
@@ -112,7 +115,7 @@ async def get_domains():
 
 @app.get("/api/trends")
 async def get_trends():
-    return orchestrator.get_trends()
+    return await orchestrator.get_trends()
 
 @app.get("/api/alerts")
 async def get_alerts():
@@ -164,6 +167,7 @@ async def get_nameit(idea: str):
     return await orchestrator.startup.name_it(idea)
 
 @app.get("/api/startbuddyyy")
+@app.get("/api/startbuddy")
 async def get_startbuddyyy(idea: str):
     return await orchestrator.startup.generate_roadmap(idea)
 
@@ -171,7 +175,7 @@ async def get_startbuddyyy(idea: str):
 # ── Startup Ideas (dashboard feed) ───────────────────────────
 @app.get("/api/startup-ideas")
 async def get_startup_ideas():
-    signals = orchestrator.get_signals()
+    signals = await orchestrator.get_signals()
     ideas = []
     for s in signals:
         if s.opportunity_score > 0.55:

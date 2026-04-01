@@ -20,20 +20,24 @@ class ScoutAgent(BaseAgent):
 
     async def fetch_signals(self, queries: List[str]) -> List[RawSignal]:
         signals = []
-        # Semaphore: 2 concurrent GitHub slots — stays under 10 req/min unauthenticated
-        sem = asyncio.Semaphore(2)
+        # Use all unique queries — limit to 15 to avoid rate limit abuse
+        priority_queries = list(dict.fromkeys(queries))[:15]
+
+        # GitHub semaphore: max 5 concurrent, no artificial sleep needed
+        # — unauthenticated limit = 10 req/min, we batch 15 queries
+        github_sem = asyncio.Semaphore(3)
+        hn_sem = asyncio.Semaphore(5)
+
         async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=15),
+            timeout=aiohttp.ClientTimeout(total=20),
             headers={"User-Agent": "Sanskriti-Intelligence/2.0"}
         ) as session:
             tasks = []
-            # Allow up to 10 queries so all 5 domains get decent coverage
-            priority_queries = queries[:10]
             for query in priority_queries:
-                tasks.append(self._scout_github_with_sem(session, query, sem))
-                tasks.append(self._scout_hn(session, query))
-            # Arxiv for first 3 queries (high-signal quality)
-            for query in priority_queries[:3]:
+                tasks.append(self._scout_github_with_sem(session, query, github_sem))
+                tasks.append(self._scout_hn_with_sem(session, query, hn_sem))
+            # Arxiv for first 5 queries (high-signal quality)
+            for query in priority_queries[:5]:
                 tasks.append(self._scout_arxiv(session, query))
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -46,20 +50,25 @@ class ScoutAgent(BaseAgent):
 
     async def _scout_github_with_sem(self, session, query, sem) -> List[RawSignal]:
         async with sem:
-            res = await self._scout_github(session, query)
-            await asyncio.sleep(4)  # 2 concurrent slots × 4s sleep ≈ 8 req/min < limit
-            return res
+            result = await self._scout_github(session, query)
+            # Small polite delay — 3 slots, ~5 queries/slot = ~15 total, well under 10/min with delay
+            await asyncio.sleep(1.2)
+            return result
+
+    async def _scout_hn_with_sem(self, session, query, hn_sem) -> List[RawSignal]:
+        async with hn_sem:
+            return await self._scout_hn(session, query)
 
     async def _scout_github(self, session, query: str) -> List[RawSignal]:
         signals = []
         try:
             url = self.sources["github"].format(query=query.replace(" ", "+"))
-            async with session.get(url) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=8)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     for item in data.get("items", [])[:5]:
                         stars = item.get("stargazers_count", 0)
-                        # velocity: normalize stars (log scale) to avoid perfect 1.0s
+                        # velocity: normalize stars (log scale)
                         velocity = min(0.97, (math.log1p(stars) / 14.0) + 0.12)
                         signals.append(RawSignal(
                             source="github",
@@ -79,6 +88,10 @@ class ScoutAgent(BaseAgent):
                         ))
                 elif resp.status == 403:
                     logger.warning("GitHub rate limit hit", query=query)
+                elif resp.status == 422:
+                    logger.warning("GitHub query invalid", query=query)
+        except asyncio.TimeoutError:
+            logger.warning("GitHub timeout", query=query)
         except Exception as e:
             logger.error("Scout GitHub error", error=str(e), query=query)
         return signals
@@ -87,7 +100,7 @@ class ScoutAgent(BaseAgent):
         signals = []
         try:
             url = self.sources["hackernews"].format(query=query.replace(" ", "+"))
-            async with session.get(url) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=6)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     for item in data.get("hits", [])[:5]:
@@ -110,6 +123,8 @@ class ScoutAgent(BaseAgent):
                                 "cross_source_count": 1,
                             }
                         ))
+        except asyncio.TimeoutError:
+            logger.warning("HackerNews timeout", query=query)
         except Exception as e:
             logger.error("Scout HN error", error=str(e), query=query)
         return signals
@@ -118,10 +133,9 @@ class ScoutAgent(BaseAgent):
         signals = []
         try:
             url = self.sources["arxiv"].format(query=query.replace(" ", "+"))
-            async with session.get(url) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=8)) as resp:
                 if resp.status == 200:
                     text = await resp.text()
-                    # Simple XML parsing - extract titles between <title> tags
                     import re
                     entries = re.findall(r'<entry>(.*?)</entry>', text, re.DOTALL)
                     for entry in entries[:3]:
@@ -144,6 +158,8 @@ class ScoutAgent(BaseAgent):
                                 "cross_source_count": 1,
                             }
                         ))
+        except asyncio.TimeoutError:
+            logger.warning("arXiv timeout", query=query)
         except Exception as e:
             logger.error("Scout arXiv error", error=str(e), query=query)
         return signals

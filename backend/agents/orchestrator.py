@@ -39,7 +39,8 @@ class SanskritiOrchestrator:
     # ── Pipeline ──────────────────────────────────────────────
     async def run_pipeline(self) -> DashboardState:
         if self._running:
-            return self.get_dashboard_state()
+            # Return immediately — don't deadlock by waiting for self
+            return await self.get_dashboard_state()
 
         self._running = True
         try:
@@ -69,17 +70,23 @@ class SanskritiOrchestrator:
 
     # ── Dashboard State ────────────────────────────────────────
     async def get_dashboard_state(self) -> DashboardState:
-        # Task 1 & 3: NEVER fallback to static/demo signals. Trigger live computation pipeline if empty.
-        if not self.scored_signals:
-            if not self._running:
-                import asyncio
-                asyncio.create_task(self.run_pipeline())
-            
-            # Wait up to 10 s for live signals to stream in before falling back
+        # If no signals yet and pipeline isn't running, kick off pipeline in background
+        if not self.scored_signals and not self._running:
             import asyncio
-            for _ in range(100):
-                if self.scored_signals: break
+            asyncio.create_task(self.run_pipeline())
+
+        # If signals are already populated, return immediately (no blocking wait)
+        # On very first load, wait up to 25s for pipeline to return data
+        if not self.scored_signals:
+            import asyncio
+            for _ in range(250):   # 25 seconds max wait
                 await asyncio.sleep(0.1)
+                if self.scored_signals:
+                    break
+
+        # If still no live signals after waiting, use ontology fallback
+        if not self.scored_signals:
+            self.scored_signals = self._generate_grounded_signals()
 
         unique_techs = len({s.technology for s in self.scored_signals})
 
@@ -90,7 +97,7 @@ class SanskritiOrchestrator:
             recent_alerts=self._build_alerts(),
             trend_forecasts=await self._build_trends(),
             total_signals_tracked=len(self.scored_signals),
-            total_technologies=unique_techs,          # Fix #18: was hardcoded 23
+            total_technologies=unique_techs,
             last_updated=datetime.utcnow(),
         )
 

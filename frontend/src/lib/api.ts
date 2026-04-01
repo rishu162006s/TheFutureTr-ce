@@ -6,13 +6,8 @@
 
 // frontend/src/lib/api.ts
 
-// Priority 1: Use the Environment Variable (for Vercel/Production)
-// Priority 2: Use the local port 8010 (for your local VS Code testing)
-// frontend/src/lib/api.ts
-
-// Priority 1: Use the Environment Variable (for Vercel/Production)
-// Priority 2: Use the local port 8010 (for your local VS Code testing)
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+// Always use port 8010 — the FastAPI backend runs here
+const API_BASE = 'http://localhost:8010';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   // Clean up endpoint to ensure no double slashes
@@ -22,8 +17,14 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
-  // ... rest of your code
-  // ... rest of your code
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`API Error ${res.status}: ${body || res.statusText}`);
+  }
+
+  return res.json();
+}
 
   // ── Types ──────────────────────────────────────────────────────
 
